@@ -7,7 +7,7 @@ output:
     source_code: embed
 ---
 
-```{r setup, include=FALSE}
+```{r global, include=FALSE}
 
 library(flexdashboard)
 library(knitr)
@@ -307,6 +307,17 @@ mmap13 <- weaponStatus1 %>% arrange(weaponStatus1$percent)
 
 mmap13$percent <- as.integer(mmap13$percent)
 
+p1 <- ggplot(mmap7, aes(x = year)) +
+  geom_bar(stat='count', fill = "navyblue", color = "white") +
+  geom_label(stat = "count", aes(label = ..count..,y = ..count..), size = 3) +
+  labs(x = "Year", y = "Number of Homicides", title = "London homicides, 2008-2019")+
+  theme_bw()
+
+p3 <- ggplot(LondonHomicideRate, aes(x= Year, y=Homicide_Rate)) +
+geom_bar(stat="identity", fill="navyblue", color = "white")+
+  geom_label(aes(label = Homicide_Rate, vjust = 1),size = 3)+
+  labs(x = "Year", y = "Rate", title = "London homicide rate per 100,000")+
+  theme_bw()
 
 # by ethnicity
 
@@ -425,38 +436,47 @@ bins
 
 
 ```
-Summary {data-orientation=Column}
+Homicide Summary {data-orientation=Column}
 =======================================================================
 
-Column {data-width=450}
+Column {data-width=600}
 -----------------------------------------------------------------------
 
-### London homicides have climbed since 2014
+### The median age for all London homicide victims is 30 (2008 to 2020)
 
 ```{r}
-p2 <- ggplot(mmap7, aes(x = year)) +
-  geom_bar(stat='count', fill = "navyblue", color = "black") +
+p6 <- ggplot(mmap5, aes(x = age))+ 
+  geom_density(fill = "red", alpha = 0.5)+ 
+  geom_histogram(colour = "white", fill = "navyblue", aes(age, ..density..), alpha = 0.5, bins = 100)+
+  labs(x = "Victim Age", y = "Proportion of Homicides")+
+  geom_vline(xintercept= median(mmap7$age)) +
+  annotate("text",label = "Mean = 34.6",x = 45, y = 0.04, colour = "red") +
+  geom_vline(xintercept= mean(mmap7$age),linetype=2) +
+  annotate("text",label = "Median = 30.0",x = 41, y = 0.035, colour = "red")+
+  scale_x_continuous(limits = c(0, 100))+
+   theme_bw()
+ggplotly(p6)
+```
+
+### After decling from 2008, the number of homicides in London increased after 2014
+
+```{r}
+
+p1 <- ggplot(mmap7, aes(x = year)) +
+  geom_bar(stat='count', fill = "navyblue", color = "white") +
+  geom_label(stat = "count", aes(label = ..count..,y = ..count..), size = 3) +
   labs(x = "Year", y = "Number of Homicides")+
   theme_bw()
-ggplotly(p2)
+ggplotly(p1)
 ```
 
-### London's homicide rate per 100,000 population has increased since 2014
-
-```{r}
-p4 <- ggplot(LondonHomicideRate, aes(x=Year, y=Homicide_Rate)) +
-geom_bar(stat="identity", fill="navyblue", color = "black")+
-  labs(x = "Year", y = "Rate")
-ggplotly(p4)
 ```
-```
-
 ```
 
 Column {data-width=500}
 -----------------------------------------------------------------------
 
-### Homicide rates per 100,000 population are highest in the centre of London (average for 2008 to 2020)
+### Homicide rates are highest in the centre of London - peaking at over 7 victims per 100,000 in City of London (average for 2008 to 2019)
 
 ```{r}
   pal <- colorBin(
@@ -474,7 +494,7 @@ labels <- sprintf(
 ) %>% lapply(htmltools::HTML)
 
 title <- tags$div(
-  HTML('<h3>Evaluating London Homicides from 2008 to 2020</h3>')
+  HTML('<h3>London Homicide Rate by Borough</h3>')
 )
 
 p3 <- leaflet(merge.mmap10) %>%
@@ -482,13 +502,13 @@ p3 <- leaflet(merge.mmap10) %>%
 p3 %>% addPolygons(
   fillColor = ~pal(homicide_rate),
   weight = 2,
-  opacity = 1,
-  color = "white",
+  opacity = 0.5,
+  color = "black",
   dashArray = "3",
   fillOpacity = 0.7,
   highlight = highlightOptions(
     weight = 5,
-    color = "#666",
+    color = "#0000FF",
     dashArray = "",
     fillOpacity = 0.7,
     bringToFront = TRUE),
@@ -501,29 +521,15 @@ p3 %>% addPolygons(
             values = ~homicide_rate,
             opacity = 0.7, title = "Homicide Rate",
             position = "bottomright") %>%
-  addControl(title, position = "topright")
+  addControl(title, position = "topright") %>%
+  setView(lng=-0.1, lat=51.51, zoom=10) %>%
+  addProviderTiles("Esri.NatGeoWorldMap")
   
 ```
 
 
 Column 
 -----------------------------------------------------------------------
-### The median victim age for all homicides is 30 (2008 to 2020)
-
-```{r}
-p6 <- ggplot(mmap5, aes(x = age))+ 
-  geom_density(fill = "red", alpha = 0.5)+ 
-  geom_histogram(colour = "white", fill = "navyblue", aes(age, ..density..), alpha = 0.5, bins = 100)+
-  labs(x = "Victim Age", y = "Proportion of Homicides")+
-  geom_vline(xintercept= median(mmap7$age)) +
-  annotate("text",label = "Mean = 34.6",x = 43, y = 0.04, colour = "red") +
-  geom_vline(xintercept= mean(mmap7$age),linetype=2) +
-  annotate("text",label = "Median = 30.0",x = 39, y = 0.035, colour = "red")+
-  scale_x_continuous(limits = c(0, 100))+
-   theme_bw()
-ggplotly(p6)
-
-```
 
 ### The number of black victims of homicide has grown sharply since 2014 (2008-2019)
 
@@ -538,7 +544,7 @@ ggplotly(p16)
 
 ``` 
 
-### Death by a knife is the largest and most rapdily growing cause of death in London (2008-2020)
+### Death by knife is the largest and most rapdily growing cause of death (2008-2019)
 
 ```{r}
  p17 <- ggplot(mmap8, aes(x = year, fill = weapon)) +
@@ -555,15 +561,15 @@ ggplotly(p17)
 By Gender and Age {data-orientation=Column}
 =======================================================================
 
-Column {data-width=450}
+Column {data-width=550}
 -----------------------------------------------------------------------
 
 
-### Male victims of homicide are younger (2008-2020)
+### A higher proportion of male homicides are young (2008-2020)
 
 ```{r}
 
-p9 <- ggplot(mmap7, aes(x = age, fill = sex)) +
+p9 <- ggplot(mmap5, aes(x = age, fill = sex)) +
   geom_density(alpha = 0.8)+
   scale_fill_brewer(palette = "Set1")+
     labs(fill = "Legend")+
@@ -573,7 +579,7 @@ p9 <- ggplot(mmap7, aes(x = age, fill = sex)) +
 ggplotly(p9)
 ```
 
-### Male victims of homicide are concentrated at a younger age (2008-2020)
+### There is a high concentration of male victims at a younger age with a mean age of 33 (2008-2020)
 
 ```{r}
 
@@ -583,6 +589,7 @@ p10 <- ggplot(data = mmap5, aes(x = sex, y = age)) + geom_boxplot(outlier.shape 
   theme_minimal()
 ggplotly(p10)
 
+
 ```
 
 ```
@@ -591,7 +598,7 @@ Column {data-width=500}
 -----------------------------------------------------------------------
 
 
-### There are key clusters for female victims of homicide in London (2008 - 2020)
+### There are larger clusters of female victims near the centre of London (2008 - 2020)
 
 ```{r}
 femaleVictims <- mmap5 %>%
@@ -601,9 +608,9 @@ femaleVictims <- mmap5 %>%
 femaleVictims %>% # Map showing all point data
  leaflet() %>%
   setView(lng =-0.1, lat=51.51, zoom=10) %>%
-  addProviderTiles(providers$OpenStreetMap) %>%
+  addProviderTiles(providers$Esri.NatGeoWorldMap) %>%
   addScaleBar %>%
-  addCircleMarkers(lng = ~longitude, lat = ~latitude, popup = ~paste0("<b>", ID, "</b>", "<br/>", date, "<br/>", age, "<br/>", sex, "<br/>", weapon, "<br/>", borough), radius = 4, clusterOptions = markerClusterOptions)
+  addCircleMarkers(lng = ~longitude, lat = ~latitude, popup = ~paste0("<b>", ID, "</b>", "<br/>", date, "<br/>", age, "<br/>", sex, "<br/>", weapon, "<br/>", borough), radius = 5, clusterOptions = markerClusterOptions)
 ``` 
 ```
 ```
@@ -619,13 +626,13 @@ p13 <- ggplot(mmap8, aes(x = age, fill = ethnicity)) +
   scale_fill_brewer(palette = "Set1")+
     labs(fill = "Legend")+
   scale_x_continuous("Victim Age")+
-  scale_y_continuous("Proportion of Ethnicity")+
+  scale_y_continuous("Proportion of Homicides")+
  theme_bw()
 ggplotly(p13)
 ``` 
 
 
-### 77% of all homicide victims in London are male (2008-2020)
+### 77% of all homicide victims in London are male (2008-2019)
 
 
 ```{r}
@@ -646,22 +653,23 @@ ggplotly(p18)
 By Ethnicity and Cause of Death {data-orientation=Column}
 =======================================================================
 
-Column {data-width=450}
+Column {data-width=600}
 -----------------------------------------------------------------------
 
 
-### Black victims of homicide are younger than White, Asian or other ethnicities (2008-2019)
+### Black victims of homicide are younger than victims from White, Asian or Other ethnicities (2008-2019)
 
 ```{r}
-p14 <- ggplot(data = mmap8, aes(x = ethnicity, y = age), na.rm = TRUE)+ geom_boxplot(outlier.shape = NA) + geom_jitter(alpha = 1/5) +
-  ylab("age of victim") +
-  stat_summary(fun.y="mean", colour="red", geom="point",shape = 16, size = 4) +
+p14 <- ggplot(data = mmap8, aes(x = reorder(ethnicity, age, "mean"), y = age), na.rm = TRUE)+ geom_boxplot(outlier.shape = NA) + geom_jitter(alpha = 1/5) +
+  ylab("Age of victim") +
+  xlab("Ethnicity")+
+  stat_summary(fun="mean", colour="red", geom="point",shape = 16, size = 4) +
   theme_minimal()
 ggplotly(p14)
 
 ``` 
 
-### Homicides involving black victims are less likely to get solved (2008-2020)
+### Homicides involving black victims are less likely to get solved in the criminal justice system (2008-2020)
 
 ```{r}
 
@@ -669,16 +677,17 @@ p23 <- ggplot(mmap14, aes(x= reorder(ethnicity, percent), y=percent))+
 geom_bar(stat="identity", fill="navyblue", color = "black")+
   coord_flip()+
   labs(x = "Ethnicity", y = "Percent Solved")+
-  theme_bw()
+  theme_minimal()
 ggplotly(p23)
+
 ```
 ```
 ```
 
-Column {data-width=500}
+Column {data-width=550}
 -----------------------------------------------------------------------
 
-### Location of homicides by ethnicity of victim (2008-2020)
+### Homicides by victim ethnicity are generally dispersed evenly across London with a higher concentration of Black victims in Eastern boroughs (2008-2020)
 
 ```{r}
 pal2 <- colorFactor(palette = c("darkgreen", "purple", "blue", "red"),
@@ -701,7 +710,7 @@ other <- mmap5 %>%
 mmap5 %>%
  leaflet() %>%
   setView(lng=-0.1, lat=51.51, zoom=10) %>%
-  addProviderTiles("CartoDB") %>%
+  addProviderTiles("Esri.NatGeoWorldMap") %>%
   addScaleBar(position = "bottomleft") %>%
   addCircleMarkers(data = black,
                    lng = ~longitude, 
@@ -750,27 +759,30 @@ mmap5 %>%
 Column
 -----------------------------------------------------------------------
 
-### Gun victims are younger on average than victims of other weapons (2008-2020)
+### Gun homicide victims are younger on average than other victims (2008-2019)
 ```{r}
-p19 <- ggplot (data = mmap8, aes(x = weapon, y = age))+ geom_boxplot() + geom_jitter(alpha = 2/5) +
-  ylab("age of victim") +
-  stat_summary(fun.y="mean", colour="red", geom="point",shape = 16, size = 4) +
+p19 <- ggplot (data = mmap8, aes(x = reorder(weapon, age, "mean"), y = age), na.rm = TRUE)+ geom_boxplot()+ geom_boxplot(outlier.shape = NA) + geom_jitter(alpha = 1/5) +
+  ylab("Age of victim") +
+  xlab("Cause of Death")+
+  stat_summary(fun="mean", colour="red", geom="point",shape = 16, size = 4) +
   theme_minimal()
 ggplotly(p19)
+
+
 ```
 
 
-### Homicides involving guns are less likely to get solved (2008-2020)
+### Homicides involving guns are also less likely to get solved in the criminal justice system (2008-2020)
 
 ```{r}
 
 p22 <- ggplot(mmap13, aes(x= reorder(weapon, percent), y=percent))+
 geom_bar(stat="identity", fill="navyblue", color = "black")+
-geom_label(size = 4, aes(label = percent, hjust = 0.2))+
   coord_flip()+
   labs(x = "Weapon", y = "Percent Solved")+
-  theme_bw()
+  theme_minimal()
 ggplotly(p22)
+
 
 ```
 
